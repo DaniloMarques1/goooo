@@ -12,7 +12,6 @@ import (
 type Server struct {
 	Router      *chi.Mux
 	port        int64
-	authHandler handler.AuthHandler
 }
 
 func NewServer(port int64) *Server {
