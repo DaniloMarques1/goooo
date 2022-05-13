@@ -8,8 +8,8 @@ import (
 )
 
 func RespondERR(w http.ResponseWriter, msg string, status int) {
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(dto.Error{Message: msg})
+	err := dto.Error{Message: msg}
+	return RespondJSON(w, err, status)
 }
 
 func RespondJSON(w http.ResponseWriter, body interface{}, status int) {
