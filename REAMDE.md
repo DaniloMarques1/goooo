@@ -11,3 +11,4 @@ Alguns desses recursos são:
 - MongoDB
 - Validação
 - Redis
+- Kafka

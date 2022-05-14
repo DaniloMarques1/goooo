@@ -31,7 +31,7 @@ func (cmr *CobMongoRepository) Save(cob *model.Cob) error {
 func (cmr *CobMongoRepository) FindById(txid string) (*model.Cob, error) {
 	var cob *model.Cob
 	filter := bson.D{{Key: "_id", Value: txid}}
-	if err := cmr.collection.FindOne(context.Background(), filter).Decode(cob); err != nil {
+	if err := cmr.collection.FindOne(context.Background(), filter).Decode(&cob); err != nil {
 		return nil, err
 	}
 	return cob, nil

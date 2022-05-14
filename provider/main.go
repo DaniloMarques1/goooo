@@ -4,10 +4,13 @@ import (
 	"context"
 	"log"
 	"os"
+	"reflect"
+	"strings"
 
 	"github.com/danilomarques1/godemo/provider/api"
 	"github.com/danilomarques1/godemo/provider/api/handler"
 	"github.com/danilomarques1/godemo/provider/api/repository"
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -28,7 +31,21 @@ func main() {
 	}
 
 	cobRepository := repository.NewCobMongoRepository(client, "cob")
-	cobHandler := handler.NewCobHandler(cobRepository)
+	validator := validator.New()
+	validator.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		splitted := strings.SplitN(fld.Tag.Get("json"), ",", 2)
+		if len(splitted) == 0 {
+			return ""
+		}
+
+		name := splitted[0]
+		if name == "-" {
+			return ""
+		}
+
+		return name
+	})
+	cobHandler := handler.NewCobHandler(cobRepository, validator)
 	cobHandler.ConfigureRoutes(server.Router)
 
 	server.Start()

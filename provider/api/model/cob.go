@@ -17,6 +17,8 @@ type AdditionalInfo struct {
 type Cob struct {
 	TxId            string           `json:"txid" bson:"_id"`
 	Value           float64          `json:"value" bson:"value"`
+	KeyType         string           `json:"key_type" bson:"key_type"`
+	Key             string           `json:"key" bson:"key"`
 	Cal             Calendar         `json:"calendar" bson:"calendar"`
 	AdditionalInfos []AdditionalInfo `json:"additional_info" bson:"additional_info"`
 }

@@ -8,16 +8,19 @@ import (
 
 	"github.com/danilomarques1/godemo/provider/api/dto"
 	"github.com/danilomarques1/godemo/provider/api/model"
+	"github.com/danilomarques1/godemo/provider/api/util"
 	chi "github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
 type CobHandler struct {
 	cobRepository model.CobRepository
+	validator     *validator.Validate
 }
 
-func NewCobHandler(cobRepository model.CobRepository) *CobHandler {
-	return &CobHandler{cobRepository: cobRepository}
+func NewCobHandler(cobRepository model.CobRepository, validator *validator.Validate) *CobHandler {
+	return &CobHandler{cobRepository: cobRepository, validator: validator}
 }
 
 func (ch *CobHandler) ConfigureRoutes(router *chi.Mux) {
@@ -30,8 +33,17 @@ func (ch *CobHandler) CreateCob(w http.ResponseWriter, r *http.Request) {
 	var createCobDto dto.CreateCobDto
 	if err := json.NewDecoder(r.Body).Decode(&createCobDto); err != nil {
 		log.Printf("ERR parsing json = %v\n", err)
-		return // TODO return some error
+		apiErr := util.NewApiError("Invalid body", http.StatusBadRequest)
+		util.RespondERR(w, apiErr)
+		return
 	}
+
+	if err := ch.validator.Struct(createCobDto); err != nil {
+		log.Printf("Error validating struct = %v\n", err)
+		util.RespondERR(w, err)
+		return
+	}
+
 	log.Printf("CreateCob = %v\n", createCobDto)
 
 	cal := model.Calendar{
@@ -55,15 +67,28 @@ func (ch *CobHandler) CreateCob(w http.ResponseWriter, r *http.Request) {
 
 	if err := ch.cobRepository.Save(cob); err != nil {
 		log.Printf("ERR saving cob = %v\n", err)
-		return // TODO return some error
+		util.RespondERR(w, err)
+		return
 	}
 	log.Printf("Cob saved\n")
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(cob)
+	util.RespondJSON(w, cob, http.StatusCreated)
 	return
 }
 
 func (ch *CobHandler) FindCob(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Consult cob\n")
+	txid := chi.URLParam(r, "txid")
+	if _, err := uuid.Parse(txid); err != nil {
+		apiErr := util.NewApiError("Invalid txid", http.StatusBadRequest)
+		util.RespondERR(w, apiErr)
+		return
+	}
+	cob, err := ch.cobRepository.FindById(txid)
+	if err != nil {
+		util.RespondERR(w, err)
+		return
+	}
+	util.RespondJSON(w, cob, http.StatusOK)
 	return
 }
