@@ -7,10 +7,13 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/danilomarques1/godemo/provider/api"
-	"github.com/danilomarques1/godemo/provider/api/handler"
-	"github.com/danilomarques1/godemo/provider/api/repository"
+	"github.com/danilomarques1/godemo/gw/api"
+	"github.com/danilomarques1/godemo/gw/api/handler"
+	"github.com/danilomarques1/godemo/gw/api/provider"
+	"github.com/danilomarques1/godemo/gw/api/repository"
+	"github.com/danilomarques1/godemo/gw/api/service"
 	"github.com/go-playground/validator/v10"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -22,16 +25,23 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server := api.NewServer(8081)
+	server := api.NewServer(os.Getenv("PORT"))
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(os.Getenv("MONGO_URI")))
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := client.Ping(context.Background(), nil); err != nil {
-		log.Fatal("Impossible to ping %v\n", err)
-	}
 
 	cobRepository := repository.NewCobMongoRepository(client, "cob")
+	redisConn := redis.NewClient(&redis.Options{
+		Addr: "0.0.0.0:6379",
+		DB:   0,
+	})
+
+	if err := redisConn.Ping(context.Background()).Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	tokenService := service.NewTokenServiceImpl(redisConn)
 	validate := validator.New()
 	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
 		splitted := strings.SplitN(fld.Tag.Get("json"), ",", 2)
@@ -45,9 +55,11 @@ func main() {
 		}
 
 		return name
+
 	})
 	validate.RegisterValidation("pix-key", ValidatePixKey)
-	cobHandler := handler.NewCobHandler(cobRepository, validate)
+	itauProvider := provider.NewItauProvider()
+	cobHandler := handler.NewCobHandler(cobRepository, tokenService, validate, itauProvider)
 	cobHandler.ConfigureRoutes(server.Router)
 
 	server.Start()

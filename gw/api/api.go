@@ -10,17 +10,17 @@ import (
 
 type Server struct {
 	Router *chi.Mux
-	port   int64
+	port   string
 }
 
-func NewServer(port int64) *Server {
+func NewServer(port string) *Server {
 	s := &Server{}
-	s.port = port
 	s.Router = chi.NewRouter()
+	s.port = port
 	return s
 }
 
 func (s *Server) Start() {
-	log.Printf("Server running on port %v\n", s.port)
+	log.Printf("Starting server on port %v\n", s.port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", s.port), s.Router))
 }

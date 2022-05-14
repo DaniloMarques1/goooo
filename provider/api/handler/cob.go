@@ -28,6 +28,7 @@ func (ch *CobHandler) ConfigureRoutes(router *chi.Mux) {
 	router.Get("/cob/{txid}", ch.FindCob)
 }
 
+// TODO add token validation
 func (ch *CobHandler) CreateCob(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Request arrived\n")
 	var createCobDto dto.CreateCobDto

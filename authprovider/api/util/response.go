@@ -9,7 +9,7 @@ import (
 
 func RespondERR(w http.ResponseWriter, msg string, status int) {
 	err := dto.Error{Message: msg}
-	return RespondJSON(w, err, status)
+	RespondJSON(w, err, status)
 }
 
 func RespondJSON(w http.ResponseWriter, body interface{}, status int) {
