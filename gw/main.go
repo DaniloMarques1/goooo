@@ -9,6 +9,7 @@ import (
 
 	"github.com/danilomarques1/godemo/gw/api"
 	"github.com/danilomarques1/godemo/gw/api/handler"
+	"github.com/danilomarques1/godemo/gw/api/producer"
 	"github.com/danilomarques1/godemo/gw/api/provider"
 	"github.com/danilomarques1/godemo/gw/api/repository"
 	"github.com/danilomarques1/godemo/gw/api/service"
@@ -59,7 +60,12 @@ func main() {
 	})
 	validate.RegisterValidation("pix-key", ValidatePixKey)
 	itauProvider := provider.NewItauProvider()
-	cobHandler := handler.NewCobHandler(cobRepository, tokenService, validate, itauProvider)
+	kafkaProducer, err := producer.NewKafkaProducer()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cobHandler := handler.NewCobHandler(cobRepository, tokenService, validate, itauProvider, kafkaProducer)
 	cobHandler.ConfigureRoutes(server.Router)
 
 	server.Start()

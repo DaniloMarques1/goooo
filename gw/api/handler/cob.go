@@ -2,10 +2,12 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/danilomarques1/godemo/gw/api/dto"
 	"github.com/danilomarques1/godemo/gw/api/model"
+	"github.com/danilomarques1/godemo/gw/api/producer"
 	"github.com/danilomarques1/godemo/gw/api/provider"
 	"github.com/danilomarques1/godemo/gw/api/response"
 	"github.com/danilomarques1/godemo/gw/api/service"
@@ -18,15 +20,17 @@ type CobHandler struct {
 	tokenService  service.TokenService
 	prov          provider.Provider
 	validate      *validator.Validate
+	prod          producer.Producer
 }
 
 func NewCobHandler(cobRepository model.CobRepository, tokenService service.TokenService,
-	validate *validator.Validate, prov provider.Provider) *CobHandler {
+	validate *validator.Validate, prov provider.Provider, prod producer.Producer) *CobHandler {
 	return &CobHandler{
 		cobRepository: cobRepository,
 		tokenService:  tokenService,
 		validate:      validate,
 		prov:          prov,
+		prod:          prod,
 	}
 }
 
@@ -55,7 +59,7 @@ func (ch *CobHandler) CreateCob(w http.ResponseWriter, r *http.Request) {
 		response.RespondERR(w, err)
 		return
 	}
-	// TODO call producer
+	go ch.produceMessage(resp) // no need for waiting
 
 	if err := ch.cobRepository.Save(resp); err != nil {
 		response.RespondERR(w, err)
@@ -64,4 +68,31 @@ func (ch *CobHandler) CreateCob(w http.ResponseWriter, r *http.Request) {
 
 	response.RespondJSON(w, resp, http.StatusCreated)
 	return
+}
+
+func (ch *CobHandler) produceMessage(cob *model.Cob) {
+	addInfos := cob.AdditionalInfos
+	if len(addInfos) == 0 {
+		return
+	}
+
+	var merchant producer.Merchant
+	for _, info := range addInfos {
+		switch info.Key {
+		case "sub_acquirer_id":
+			merchant.SubAcquirerId = info.Value
+		case "sub_acquirer_name":
+			merchant.SubAcquirerName = info.Value
+		case "merchant_id":
+			merchant.MerchantId = info.Value
+		case "merchant_name":
+			merchant.MerchantName = info.Value
+		case "merchant_address":
+			merchant.MerchantAddress = info.Value
+		}
+	}
+
+	if err := ch.prod.Produce(merchant); err != nil {
+		log.Printf("Error producing message = %v\n", err)
+	}
 }
