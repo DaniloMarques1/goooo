@@ -52,7 +52,7 @@ func (ch *CobHandler) CreateCob(w http.ResponseWriter, r *http.Request) {
 		ExpiresIn: createCobDto.Cal.ExpiresIn,
 	}
 	addInfosDto := createCobDto.AdditionalInfos
-	addInfos := make([]model.AdditionalInfo, len(addInfosDto))
+	addInfos := make([]model.AdditionalInfo, 0)
 	for _, info := range addInfosDto {
 		addInfo := model.AdditionalInfo{Key: info.Key, Value: info.Value}
 		addInfos = append(addInfos, addInfo)
@@ -61,6 +61,8 @@ func (ch *CobHandler) CreateCob(w http.ResponseWriter, r *http.Request) {
 	cob := &model.Cob{
 		TxId:            uuid.NewString(),
 		Value:           createCobDto.Value,
+		KeyType:         createCobDto.KeyType,
+		Key:             createCobDto.Key,
 		Cal:             cal,
 		AdditionalInfos: addInfos,
 	}
