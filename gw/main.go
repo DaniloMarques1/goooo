@@ -4,18 +4,18 @@ import (
 	"context"
 	"log"
 	"os"
-	"reflect"
-	"strings"
 
 	"github.com/danilomarques1/godemo/gw/api"
+	"github.com/danilomarques1/godemo/gw/api/cache"
+	"github.com/danilomarques1/godemo/gw/api/dto"
 	"github.com/danilomarques1/godemo/gw/api/handler"
 	"github.com/danilomarques1/godemo/gw/api/producer"
 	"github.com/danilomarques1/godemo/gw/api/provider"
 	"github.com/danilomarques1/godemo/gw/api/repository"
 	"github.com/danilomarques1/godemo/gw/api/service"
+	"github.com/danilomarques1/godemo/gw/api/validators"
 	"github.com/go-playground/validator/v10"
 	"github.com/go-redis/redis/v8"
-	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -33,32 +33,22 @@ func main() {
 	}
 
 	cobRepository := repository.NewCobMongoRepository(client, "cob")
+
 	redisConn := redis.NewClient(&redis.Options{
 		Addr: "0.0.0.0:6379",
 		DB:   0,
 	})
-
 	if err := redisConn.Ping(context.Background()).Err(); err != nil {
 		log.Fatal(err)
 	}
 
-	tokenService := service.NewTokenServiceImpl(redisConn)
+	redisCache := cache.NewRedisCache[*dto.Token](redisConn)
+	tokenService := service.NewTokenServiceImpl(redisCache)
+
 	validate := validator.New()
-	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
-		splitted := strings.SplitN(fld.Tag.Get("json"), ",", 2)
-		if len(splitted) == 0 {
-			return ""
-		}
+	validate.RegisterTagNameFunc(validators.GetJsonTagName)
+	validate.RegisterValidation("pix-key", validators.ValidatePixKey)
 
-		name := splitted[0]
-		if name == "-" {
-			return ""
-		}
-
-		return name
-
-	})
-	validate.RegisterValidation("pix-key", ValidatePixKey)
 	itauProvider := provider.NewItauProvider()
 	kafkaProducer, err := producer.NewKafkaProducer()
 	if err != nil {
@@ -69,26 +59,4 @@ func main() {
 	cobHandler.ConfigureRoutes(server.Router)
 
 	server.Start()
-}
-
-func ValidatePixKey(fl validator.FieldLevel) bool {
-	log.Printf("Adding Pix key validation\n")
-	parent := fl.Parent()
-	pixKey := fl.Field().String()
-	switch parent.FieldByName("KeyType").String() {
-	case "NATIONALID":
-	case "MOBILEPHONE":
-		return len(pixKey) == 11
-	case "MERCHANTNATIONALID":
-		return len(pixKey) == 16
-	case "RANDOMKEY":
-		if _, err := uuid.Parse(pixKey); err != nil {
-			return false
-		}
-		return true
-
-	default:
-		return true
-	}
-	return true
 }

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -10,9 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/danilomarques1/godemo/gw/api/cache"
 	"github.com/danilomarques1/godemo/gw/api/dto"
 	"github.com/danilomarques1/godemo/gw/api/response"
-	"github.com/go-redis/redis/v8"
 )
 
 type TokenService interface {
@@ -20,24 +19,25 @@ type TokenService interface {
 }
 
 type TokenServiceImpl struct {
-	client    *http.Client
-	tokenUrl  string
-	redisConn *redis.Client
+	client        *http.Client
+	tokenUrl      string
+	cacheProvider cache.Cache[*dto.Token]
 }
 
-func NewTokenServiceImpl(redisConn *redis.Client) *TokenServiceImpl {
+func NewTokenServiceImpl(cacheProvider cache.Cache[*dto.Token]) *TokenServiceImpl {
 	client := &http.Client{}
 	tokenUrl := os.Getenv("AUTH_BASE_URL")
-	return &TokenServiceImpl{client: client, tokenUrl: tokenUrl, redisConn: redisConn}
+	return &TokenServiceImpl{client: client, tokenUrl: tokenUrl, cacheProvider: cacheProvider}
 }
 
 func (ts *TokenServiceImpl) GetToken() (*dto.Token, error) {
-	token, err := ts.getFromCache()
+	token := &dto.Token{}
+	err := ts.cacheProvider.GetFromCache("token", token)
 	if err == nil {
 		log.Printf("Getting token from cache...\n")
 		return token, nil
 	}
-	log.Printf("Token not found on cache, requesting auth provider")
+	log.Printf("Token not found on cache, requesting auth provider %v\n", err)
 
 	body := url.Values{}
 	body.Add("client_id", os.Getenv("CLIENT_ID"))
@@ -62,7 +62,7 @@ func (ts *TokenServiceImpl) GetToken() (*dto.Token, error) {
 			return nil, err
 		}
 
-		ts.saveCache(token)
+		ts.cacheProvider.SaveToCache("token", &token, time.Second*time.Duration(token.ExpiresIn))
 		return &token, nil
 	} else if resp.StatusCode == http.StatusBadRequest {
 		var authError dto.AuthResponseError
@@ -74,30 +74,4 @@ func (ts *TokenServiceImpl) GetToken() (*dto.Token, error) {
 	} else {
 		return nil, response.NewApiError("Internal server error", http.StatusInternalServerError)
 	}
-}
-
-func (ts *TokenServiceImpl) getFromCache() (*dto.Token, error) {
-	str, err := ts.redisConn.Get(context.Background(), "token").Result()
-	if err != nil {
-		return nil, err
-	}
-	var token dto.Token
-	if err := json.Unmarshal([]byte(str), &token); err != nil {
-		return nil, err
-	}
-	return &token, nil
-}
-
-func (ts *TokenServiceImpl) saveCache(token dto.Token) error {
-	bytes, err := json.Marshal(token)
-	if err != nil {
-		return err
-	}
-
-	err = ts.redisConn.SetEX(context.Background(), "token", string(bytes), time.Second*time.Duration(token.ExpiresIn)).Err()
-	if err != nil {
-		log.Printf("Error = %v\n", err)
-		return err
-	}
-	return nil
 }

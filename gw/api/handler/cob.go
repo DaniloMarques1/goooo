@@ -41,7 +41,8 @@ func (ch *CobHandler) ConfigureRoutes(router *chi.Mux) {
 func (ch *CobHandler) CreateCob(w http.ResponseWriter, r *http.Request) {
 	var cobCreateDto dto.CreateCobDto
 	if err := json.NewDecoder(r.Body).Decode(&cobCreateDto); err != nil {
-		response.RespondERR(w, err)
+		apiErr := response.NewApiError("Invalid body", http.StatusBadRequest)
+		response.RespondERR(w, apiErr)
 		return
 	}
 	if err := ch.validate.Struct(cobCreateDto); err != nil {
