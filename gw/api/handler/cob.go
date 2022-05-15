@@ -7,8 +7,8 @@ import (
 	"github.com/danilomarques1/godemo/gw/api/dto"
 	"github.com/danilomarques1/godemo/gw/api/model"
 	"github.com/danilomarques1/godemo/gw/api/provider"
+	"github.com/danilomarques1/godemo/gw/api/response"
 	"github.com/danilomarques1/godemo/gw/api/service"
-	"github.com/danilomarques1/godemo/gw/api/util"
 	chi "github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 )
@@ -37,30 +37,31 @@ func (ch *CobHandler) ConfigureRoutes(router *chi.Mux) {
 func (ch *CobHandler) CreateCob(w http.ResponseWriter, r *http.Request) {
 	var cobCreateDto dto.CreateCobDto
 	if err := json.NewDecoder(r.Body).Decode(&cobCreateDto); err != nil {
-		util.RespondERR(w, err)
+		response.RespondERR(w, err)
 		return
 	}
 	if err := ch.validate.Struct(cobCreateDto); err != nil {
-		util.RespondERR(w, err)
+		response.RespondERR(w, err)
 		return
 	}
 	token, err := ch.tokenService.GetToken()
 	if err != nil {
-		util.RespondERR(w, err)
+		response.RespondERR(w, err)
 		return
 	}
 
 	resp, err := ch.prov.CreateCob(token.AccessToken, cobCreateDto)
 	if err != nil {
-		util.RespondERR(w, err)
+		response.RespondERR(w, err)
 		return
 	}
+	// TODO call producer
 
 	if err := ch.cobRepository.Save(resp); err != nil {
-		util.RespondERR(w, err)
+		response.RespondERR(w, err)
 		return
 	}
 
-	util.RespondJSON(w, resp, http.StatusCreated)
+	response.RespondJSON(w, resp, http.StatusCreated)
 	return
 }

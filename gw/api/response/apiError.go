@@ -1,4 +1,4 @@
-package util
+package response
 
 type ApiError struct {
 	Msg    string

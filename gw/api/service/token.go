@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/danilomarques1/godemo/gw/api/dto"
-	"github.com/danilomarques1/godemo/gw/api/util"
+	"github.com/danilomarques1/godemo/gw/api/response"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -70,9 +70,9 @@ func (ts *TokenServiceImpl) GetToken() (*dto.Token, error) {
 			log.Printf("Error decoding error json = %v\n", err)
 			return nil, err
 		}
-		return nil, util.NewApiError(authError.Message, http.StatusBadRequest)
+		return nil, response.NewApiError(authError.Message, http.StatusBadRequest)
 	} else {
-		return nil, util.NewApiError("Internal server error", http.StatusInternalServerError)
+		return nil, response.NewApiError("Internal server error", http.StatusInternalServerError)
 	}
 }
 

@@ -8,7 +8,7 @@ import (
 
 	"github.com/danilomarques1/godemo/gw/api/dto"
 	"github.com/danilomarques1/godemo/gw/api/model"
-	"github.com/danilomarques1/godemo/gw/api/util"
+	"github.com/danilomarques1/godemo/gw/api/response"
 )
 
 type ItauProvider struct {
@@ -43,7 +43,7 @@ func (ip *ItauProvider) CreateCob(token string, cobDto dto.CreateCobDto) (*model
 		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
 			return nil, err
 		}
-		return nil, util.NewApiError(apiError.Message, resp.StatusCode)
+		return nil, response.NewApiError(apiError.Message, resp.StatusCode)
 	}
 
 	var cobResp model.Cob
