@@ -28,7 +28,6 @@ func (rc *RedisCache[T]) SaveToCache(key string, token T, duration time.Duration
 		key,
 		string(bytes),
 		duration,
-		//time.Second*time.Duration(token.ExpiresIn),
 	).Err()
 
 	if err != nil {
