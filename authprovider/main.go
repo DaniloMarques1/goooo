@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/danilomarques1/godemo/authprovider/api"
 	"github.com/danilomarques1/godemo/authprovider/api/handler"
@@ -13,7 +14,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server := api.NewServer(8080)
+	server := api.NewServer(os.Getenv("PORT"))
 	authHandler := handler.NewAuthHandlerImpl()
 	authHandler.ConfigureRoutes(server.Router)
 	server.Start()

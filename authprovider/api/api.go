@@ -10,10 +10,10 @@ import (
 
 type Server struct {
 	Router *chi.Mux
-	port   int64
+	port   string
 }
 
-func NewServer(port int64) *Server {
+func NewServer(port string) *Server {
 	s := &Server{}
 	s.port = port
 	s.Router = chi.NewRouter()
