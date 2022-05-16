@@ -15,7 +15,7 @@ func RespondERR(w http.ResponseWriter, err error) {
 		errDto := dto.ApiErrorDto{Message: apiError.Msg}
 		RespondJSON(w, errDto, apiError.Status)
 	case validator.ValidationErrors:
-		errors := GetValidationErrors(err)
+		errors := getValidationErrors(err)
 		errDto := dto.ApiErrorDto{Message: "Validation error", Errors: errors}
 		RespondJSON(w, errDto, http.StatusBadRequest)
 	default:
@@ -29,7 +29,7 @@ func RespondJSON(w http.ResponseWriter, body interface{}, status int) {
 	json.NewEncoder(w).Encode(body)
 }
 
-func GetValidationErrors(errors error) []dto.Error {
+func getValidationErrors(errors error) []dto.Error {
 	validationErrors := make([]dto.Error, 0)
 	for _, err := range errors.(validator.ValidationErrors) {
 		e := dto.Error{Field: err.Field(), RejectedValue: err.Value()}

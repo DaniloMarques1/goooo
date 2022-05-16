@@ -17,8 +17,8 @@ func NewRedisCache[T any](redisConn *redis.Client) *RedisCache[T] {
 	return &RedisCache[T]{redisConn: redisConn}
 }
 
-func (rc *RedisCache[T]) SaveToCache(key string, token T, duration time.Duration) error {
-	bytes, err := json.Marshal(token)
+func (rc *RedisCache[T]) SaveToCache(key string, value T, duration time.Duration) error {
+	bytes, err := json.Marshal(value)
 	if err != nil {
 		return err
 	}
@@ -37,6 +37,7 @@ func (rc *RedisCache[T]) SaveToCache(key string, token T, duration time.Duration
 	return nil
 }
 
+// TODO maybe i should return T instead of receiving returnedValue as parameter
 func (rs *RedisCache[T]) GetFromCache(key string, returnedValue T) error {
 	str, err := rs.redisConn.Get(context.Background(), key).Result()
 	if err != nil {

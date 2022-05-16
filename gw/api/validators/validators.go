@@ -11,9 +11,9 @@ import (
 
 func ValidatePixKey(fl validator.FieldLevel) bool {
 	log.Printf("Adding Pix key validation\n")
-	parent := fl.Parent()
+	parent := fl.Parent().FieldByName("KeyType").String()
 	pixKey := fl.Field().String()
-	switch parent.FieldByName("KeyType").String() {
+	switch parent {
 	case "NATIONALID":
 	case "MOBILEPHONE":
 		return len(pixKey) == 11

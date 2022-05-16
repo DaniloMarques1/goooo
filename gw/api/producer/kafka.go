@@ -9,7 +9,6 @@ import (
 )
 
 type KafkaProducer struct {
-	//writer *kafka.Writer
 	conn *kafka.Conn
 }
 
@@ -21,15 +20,10 @@ func NewKafkaProducer() (*KafkaProducer, error) {
 	if err != nil {
 		return nil, err
 	}
-	//writer := &kafka.Writer{
-	//	Addr:  kafka.TCP(addr),
-	//	Topic: topic,
-	//}
-
-	//return &KafkaProducer{writer: writer}
 	return &KafkaProducer{conn: conn}, nil
 }
 
+// TODO maybe receive the bytes already
 func (kp *KafkaProducer) Produce(merchant Merchant) error {
 	b, err := merchant.Marshal()
 	if err != nil {

@@ -31,14 +31,22 @@ func NewTokenServiceImpl(cacheProvider cache.Cache[*dto.Token]) *TokenServiceImp
 }
 
 func (ts *TokenServiceImpl) GetToken() (*dto.Token, error) {
-	token := &dto.Token{}
-	err := ts.cacheProvider.GetFromCache("token", token)
+	cachedToken := &dto.Token{}
+	err := ts.cacheProvider.GetFromCache("token", cachedToken)
 	if err == nil {
 		log.Printf("Getting token from cache...\n")
-		return token, nil
+		return cachedToken, nil
 	}
 	log.Printf("Token not found on cache, requesting auth provider %v\n", err)
 
+	token, err := ts.requestAuthProvider()
+	if err != nil {
+		return nil, err
+	}
+	return token, nil
+}
+
+func (ts *TokenServiceImpl) requestAuthProvider() (*dto.Token, error) {
 	body := url.Values{}
 	body.Add("client_id", os.Getenv("CLIENT_ID"))
 	body.Add("client_secret", os.Getenv("CLIENT_SECRET"))

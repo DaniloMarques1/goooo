@@ -26,7 +26,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server := api.NewServer(os.Getenv("PORT"))
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(os.Getenv("MONGO_URI")))
 	if err != nil {
 		log.Fatal(err)
@@ -35,7 +34,7 @@ func main() {
 	cobRepository := repository.NewCobMongoRepository(client, "cob")
 
 	redisConn := redis.NewClient(&redis.Options{
-		Addr: "0.0.0.0:6379",
+		Addr: os.Getenv("REDIS_ADDR"),
 		DB:   0,
 	})
 	if err := redisConn.Ping(context.Background()).Err(); err != nil {
@@ -55,6 +54,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	server := api.NewServer(os.Getenv("PORT"))
 	cobHandler := handler.NewCobHandler(cobRepository, tokenService, validate, itauProvider, kafkaProducer)
 	cobHandler.ConfigureRoutes(server.Router)
 
