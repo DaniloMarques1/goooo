@@ -19,6 +19,7 @@ type Server struct {
 func NewServer(port string) *Server {
 	s := &Server{}
 	s.Router = chi.NewRouter()
+	s.Router.Use(s.Authorization)
 	s.port = port
 	return s
 }
