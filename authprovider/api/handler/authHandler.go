@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/danilomarques1/godemo/authprovider/api/dto"
-	"github.com/danilomarques1/godemo/authprovider/api/service"
 	"github.com/danilomarques1/godemo/authprovider/api/response"
+	"github.com/danilomarques1/godemo/authprovider/api/service"
 	chi "github.com/go-chi/chi/v5"
 )
 

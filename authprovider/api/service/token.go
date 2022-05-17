@@ -2,6 +2,7 @@ package service
 
 import (
 	"os"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 )
@@ -19,7 +20,7 @@ func GetToken(clientId, clientSecret string) (string, error) {
 		ClientId:     clientId,
 		ClientSecret: clientSecret,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: TOKEN_EXPIRATION_TIME,
+			ExpiresAt: time.Now().Unix() + TOKEN_EXPIRATION_TIME,
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
