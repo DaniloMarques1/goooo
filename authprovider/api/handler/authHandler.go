@@ -20,7 +20,7 @@ func NewAuthHandlerImpl() *AuthHandlerImpl {
 	return &AuthHandlerImpl{}
 }
 
-func (ah *AuthHandlerImpl) ConfigureRoutes(router *chi.Mux) {
+func (ah *AuthHandlerImpl) ConfigureRoutes(router chi.Router) {
 	router.Post("/api/oauth/token", ah.GetToken)
 }
 
