@@ -23,7 +23,7 @@ func NewCobHandler(cobRepository model.CobRepository, validator *validator.Valid
 	return &CobHandler{cobRepository: cobRepository, validator: validator}
 }
 
-func (ch *CobHandler) ConfigureRoutes(router *chi.Mux) {
+func (ch *CobHandler) ConfigureRoutes(router chi.Router) {
 	router.Post("/cob", ch.CreateCob)
 	router.Get("/cob/{txid}", ch.FindCob)
 }
