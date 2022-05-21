@@ -34,7 +34,7 @@ func NewCobHandler(cobRepository model.CobRepository, tokenService service.Token
 	}
 }
 
-func (ch *CobHandler) ConfigureRoutes(router *chi.Mux) {
+func (ch *CobHandler) ConfigureRoutes(router chi.Router) {
 	router.Post("/cob", ch.CreateCob)
 }
 
