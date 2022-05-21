@@ -3,9 +3,14 @@ package consumer
 import (
 	"context"
 	"log"
+	"os"
 
 	"github.com/segmentio/kafka-go"
 )
+
+type Consumer interface {
+	Consume() []byte
+}
 
 type KafkaConsumer struct {
 	reader *kafka.Reader
@@ -14,9 +19,9 @@ type KafkaConsumer struct {
 func NewKafkaConsumer() *KafkaConsumer {
 	kConsumer := &KafkaConsumer{}
 	kConsumer.reader = kafka.NewReader(kafka.ReaderConfig{
-		Brokers:   []string{"localhost:9092"}, // @@@
-		GroupID:   "registerMerchants",
-		Topic:     "merchants", // @@@
+		Brokers:   []string{os.Getenv("KAFKA_BROKER")},
+		GroupID:   "register_merchants",
+		Topic:     os.Getenv("KAFKA_TOPIC"),
 		Partition: 0,
 	})
 	return kConsumer
