@@ -14,7 +14,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const TABLE = `
+const schema = `
 CREATE TABLE IF NOT EXISTS merchant(
   merchant_id varchar(30) primary key,
   merchant_name varchar(50) not null,
@@ -35,7 +35,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if _, err := db.Exec(TABLE); err != nil {
+	if _, err := db.Exec(schema); err != nil {
 		log.Fatal(err)
 	}
 
