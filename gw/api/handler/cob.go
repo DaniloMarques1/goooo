@@ -48,6 +48,8 @@ func (ch *CobHandler) CreateCob(w http.ResponseWriter, r *http.Request) {
 		response.RespondERR(w, apiErr)
 		return
 	}
+	log.Printf("Body received %+v\n", cobCreateDto)
+
 	if err := ch.validate.Struct(cobCreateDto); err != nil {
 		response.RespondERR(w, err)
 		return
@@ -57,6 +59,7 @@ func (ch *CobHandler) CreateCob(w http.ResponseWriter, r *http.Request) {
 		response.RespondERR(w, err)
 		return
 	}
+	log.Printf("Token received %+v\n", token)
 
 	resp, err := ch.prov.CreateCob(token.AccessToken, cobCreateDto)
 	if err != nil {
