@@ -8,8 +8,8 @@ import (
 
 	"github.com/danilomarques1/godemo/registerMerchant/api"
 	"github.com/danilomarques1/godemo/registerMerchant/api/consumer"
+	"github.com/danilomarques1/godemo/registerMerchant/api/handler"
 	"github.com/danilomarques1/godemo/registerMerchant/api/repository"
-	"github.com/danilomarques1/godemo/registerMerchant/api/service"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -30,7 +30,8 @@ func main() {
 	}
 
 	dataSource := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_USER"), os.Getenv("DB_PWD"), os.Getenv("DB_NAME"))
+		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_USER"),
+		os.Getenv("DB_PWD"), os.Getenv("DB_NAME"))
 	db, err := sql.Open("postgres", dataSource)
 	if err != nil {
 		log.Fatal(err)
@@ -40,27 +41,13 @@ func main() {
 	}
 
 	merchantRepository := repository.NewMerchantSqlRepository(db)
-	kafkaConsumer := consumer.NewKafkaConsumer()
-	merchantService := service.NewMerchantServiceImpl(merchantRepository)
-
-	go merchantService.ConsumeAndSave(kafkaConsumer)
-
-	// @@@
-	//go func() {
-	//	for {
-	//		b := kafkaConsumer.Consume()
-	//		log.Printf("Mensagem recebida do kafka %v\n", string(b))
-
-	//		if len(b) > 0 {
-	//			merchant := &model.Merchant{}
-	//			if err := json.Unmarshal(b, merchant); err == nil {
-	//				log.Printf("Salvando merchant em banco %v\n", merchant)
-	//				merchantRepository.Save(merchant)
-	//			}
-	//		}
-	//	}
-	//}()
+	kafkaConsumer := consumer.NewKafkaConsumer(merchantRepository)
+	go kafkaConsumer.RegisterMerchant()
 
 	server := api.NewServer(os.Getenv("PORT"))
+
+	merchantHandler := handler.NewMerchantHandler(merchantRepository)
+	merchantHandler.ConfigureRoutes(server.Router)
+
 	server.Start()
 }
