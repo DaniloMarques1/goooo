@@ -23,15 +23,9 @@ func NewKafkaProducer() (*KafkaProducer, error) {
 	return &KafkaProducer{conn: conn}, nil
 }
 
-// TODO maybe receive the bytes already
-func (kp *KafkaProducer) Produce(merchant Merchant) error {
-	b, err := merchant.Marshal()
-	if err != nil {
-		return err
-	}
-	_, err = kp.conn.WriteMessages(
+func (kp *KafkaProducer) Produce(b []byte) error {
+	_, err := kp.conn.WriteMessages(
 		kafka.Message{
-			Key:   []byte("merchant"),
 			Value: b,
 		},
 	)

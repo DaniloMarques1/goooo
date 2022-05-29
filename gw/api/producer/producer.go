@@ -21,6 +21,6 @@ func (m *Merchant) Marshal() ([]byte, error) {
 }
 
 type Producer interface {
-	Produce(merchant Merchant) error
+	Produce(b []byte) error
 	Close() error
 }

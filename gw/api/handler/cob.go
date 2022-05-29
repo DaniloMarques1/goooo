@@ -112,7 +112,9 @@ func (ch *CobHandler) produceMessage(cob *model.Cob) {
 		}
 	}
 
-	if err := ch.prod.Produce(merchant); err != nil {
-		log.Printf("Error producing message = %v\n", err)
+	if b, err := merchant.Marshal(); err != nil {
+		if err := ch.prod.Produce(b); err != nil {
+			log.Printf("Error producing message = %v\n", err)
+		}
 	}
 }
