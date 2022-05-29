@@ -7,7 +7,6 @@ import (
 
 	"github.com/danilomarques1/godemo/gw/api"
 	"github.com/danilomarques1/godemo/gw/api/cache"
-	"github.com/danilomarques1/godemo/gw/api/dto"
 	"github.com/danilomarques1/godemo/gw/api/handler"
 	"github.com/danilomarques1/godemo/gw/api/producer"
 	"github.com/danilomarques1/godemo/gw/api/provider"
@@ -41,7 +40,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	redisCache := cache.NewRedisCache[*dto.Token](redisConn)
+	redisCache := cache.NewRedisCache(redisConn)
 	tokenService := service.NewTokenServiceImpl(redisCache)
 
 	validate := validator.New()

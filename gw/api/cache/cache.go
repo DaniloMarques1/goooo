@@ -2,7 +2,7 @@ package cache
 
 import "time"
 
-type Cache[T any] interface {
-	SaveToCache(key string, value T, duration time.Duration) error
-	GetFromCache(key string, returnedValue T) error
+type Cache interface {
+	SaveToCache(key string, value []byte, duration time.Duration) error
+	GetFromCache(key string) ([]byte, error)
 }
