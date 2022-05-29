@@ -9,6 +9,11 @@ import (
 	"reflect"
 )
 
+// validates the key field based on the key type
+// where a NATIONALID should have 11 characters
+// where a MOBILEPHOBE should have 11 characters
+// where a MERCHANTNATIONALID should have 16 characters
+// where a RANDOMKEY should be a valid uuid
 func ValidatePixKey(fl validator.FieldLevel) bool {
 	log.Printf("Adding Pix key validation\n")
 	parent := fl.Parent().FieldByName("KeyType").String()
@@ -26,11 +31,12 @@ func ValidatePixKey(fl validator.FieldLevel) bool {
 		return true
 
 	default:
-		return true
+		return false
 	}
 	return true
 }
 
+// return the field name inside the json tag
 func GetJsonTagName(fld reflect.StructField) string {
 	splitted := strings.SplitN(fld.Tag.Get("json"), ",", 2)
 	if len(splitted) == 0 {
