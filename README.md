@@ -1,7 +1,7 @@
 # Go
 
 A ideia é criar uma aplicação que possa utilizar a maioria dos recursos
-que normalmente usamos em nosso projeto para ter uma ideia de como seria
+que normalmente usamos em nossos projetos para ter uma ideia de como seria
 feito no go.
 
 Alguns desses recursos são:
@@ -12,3 +12,5 @@ Alguns desses recursos são:
 - Validação
 - Redis
 - Kafka
+- Testing
+- GraphQL
