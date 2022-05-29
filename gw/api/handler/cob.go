@@ -13,6 +13,7 @@ import (
 	"github.com/danilomarques1/godemo/gw/api/service"
 	chi "github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 type CobHandler struct {
@@ -36,6 +37,7 @@ func NewCobHandler(cobRepository model.CobRepository, tokenService service.Token
 
 func (ch *CobHandler) ConfigureRoutes(router chi.Router) {
 	router.Post("/cob", ch.CreateCob)
+	router.Get("/cob/{txid}", ch.FindCob)
 }
 
 func (ch *CobHandler) CreateCob(w http.ResponseWriter, r *http.Request) {
@@ -68,6 +70,23 @@ func (ch *CobHandler) CreateCob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.RespondJSON(w, resp, http.StatusCreated)
+	return
+}
+
+func (ch *CobHandler) FindCob(w http.ResponseWriter, r *http.Request) {
+	txid := chi.URLParam(r, "txid")
+	if _, err := uuid.Parse(txid); err != nil {
+		apiErr := response.NewApiError("Invalid txid", http.StatusBadRequest)
+		response.RespondERR(w, apiErr)
+		return
+	}
+	cob, err := ch.cobRepository.FindById(txid)
+	if err != nil {
+		response.RespondERR(w, err)
+		return
+	}
+
+	response.RespondJSON(w, cob, http.StatusOK)
 	return
 }
 
