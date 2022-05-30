@@ -2,9 +2,12 @@ package repository
 
 import (
 	"context"
+	"errors"
+	"net/http"
 	"os"
 
 	"github.com/danilomarques1/godemo/gw/api/model"
+	"github.com/danilomarques1/godemo/gw/api/response"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -32,6 +35,10 @@ func (cmr *CobMongoRepository) FindById(txid string) (*model.Cob, error) {
 	var cob *model.Cob
 	filter := bson.D{{Key: "_id", Value: txid}}
 	if err := cmr.collection.FindOne(context.Background(), filter).Decode(&cob); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, response.NewApiError("Cob not found", http.StatusNotFound)
+		}
+
 		return nil, err
 	}
 	return cob, nil
