@@ -75,25 +75,14 @@ func (ts *TokenServiceImpl) requestAuthProvider() (*dto.Token, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusCreated {
-		var token dto.Token
-		if err := json.NewDecoder(resp.Body).Decode(&token); err != nil {
-			log.Printf("Error decoding json = %v\n", err)
-			return nil, err
-		}
-
-		ts.saveTokenToCache(&token)
-		return &token, nil
-	} else if resp.StatusCode == http.StatusBadRequest {
-		var authError dto.AuthResponseError
-		if err := json.NewDecoder(resp.Body).Decode(&authError); err != nil {
-			log.Printf("Error decoding error json = %v\n", err)
-			return nil, err
-		}
-		return nil, response.NewApiError(authError.Message, http.StatusBadRequest)
-	} else {
-		return nil, response.NewApiError("Internal server error", http.StatusInternalServerError)
+	token, err := ts.parseResponse(resp)
+	if err != nil {
+		log.Printf("Error parsing response %v\n", err)
+		return nil, err
 	}
+
+	ts.saveTokenToCache(token)
+	return token, nil
 }
 
 func (ts *TokenServiceImpl) saveTokenToCache(token *dto.Token) error {
@@ -110,4 +99,24 @@ func (ts *TokenServiceImpl) saveTokenToCache(token *dto.Token) error {
 		return err
 	}
 	return nil
+}
+
+func (ts *TokenServiceImpl) parseResponse(resp *http.Response) (*dto.Token, error) {
+	if resp.StatusCode == http.StatusCreated {
+		token := &dto.Token{}
+		if err := json.NewDecoder(resp.Body).Decode(token); err != nil {
+			log.Printf("Error decoding json = %v\n", err)
+			return nil, err
+		}
+
+		return token, nil
+	} else {
+		authError := &dto.AuthResponseError{}
+		if err := json.NewDecoder(resp.Body).Decode(authError); err != nil {
+			log.Printf("Error decoding error json = %v\n", err)
+			return nil, err
+		}
+
+		return nil, response.NewApiError(authError.Message, resp.StatusCode)
+	}
 }
