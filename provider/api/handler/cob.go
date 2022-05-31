@@ -23,6 +23,8 @@ func NewCobHandler(cobRepository model.CobRepository, validator *validator.Valid
 	return &CobHandler{cobRepository: cobRepository, validator: validator}
 }
 
+// TODO should have a "pay" endpoint
+// and a cancel endpoint
 func (ch *CobHandler) ConfigureRoutes(router chi.Router) {
 	router.Post("/cob", ch.CreateCob)
 	router.Get("/cob/{txid}", ch.FindCob)
@@ -59,6 +61,7 @@ func (ch *CobHandler) CreateCob(w http.ResponseWriter, r *http.Request) {
 
 	cob := &model.Cob{
 		TxId:            uuid.NewString(),
+		Status:          model.ACTIVE,
 		Value:           createCobDto.Value,
 		KeyType:         createCobDto.KeyType,
 		Key:             createCobDto.Key,
