@@ -80,4 +80,25 @@ func (ip *ItauProvider) FindCob(token, txid string) (*model.Cob, error) {
 	return cob, nil
 }
 
-// TODO implement cancel cob
+func (ip *ItauProvider) Cancel(token, txid string) error {
+	request, err := http.NewRequest(http.MethodPatch, ip.providerUrl+"/"+txid, nil)
+	if err != nil {
+		return err
+	}
+	request.Header.Add("Authorization", "Bearer "+token)
+	resp, err := ip.client.Do(request)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		apiErr := &dto.ApiErrorDto{}
+		if err := json.NewDecoder(resp.Body).Decode(apiErr); err != nil {
+			return err
+		}
+		return response.NewApiError(apiErr.Message, resp.StatusCode)
+	}
+
+	return nil
+}

@@ -35,10 +35,10 @@ func NewCobHandler(cobRepository model.CobRepository, tokenService service.Token
 	}
 }
 
-// TODO should have a cancel endpoint
 func (ch *CobHandler) ConfigureRoutes(router chi.Router) {
 	router.Post("/cob", ch.CreateCob)
 	router.Get("/cob/{txid}", ch.FindCob)
+	router.Delete("/cob/{txid", ch.CancelCob)
 }
 
 func (ch *CobHandler) CreateCob(w http.ResponseWriter, r *http.Request) {
@@ -81,6 +81,13 @@ func (ch *CobHandler) FindCob(w http.ResponseWriter, r *http.Request) {
 		response.RespondERR(w, apiErr)
 		return
 	}
+
+	cob, err := ch.cobRepository.FindById(txid)
+	if err != nil {
+		response.RespondERR(w, err)
+		return
+	}
+
 	token, err := ch.tokenService.GetToken()
 	if err != nil {
 		response.RespondERR(w, err)
@@ -93,18 +100,47 @@ func (ch *CobHandler) FindCob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cob, err := ch.cobRepository.FindById(txid)
-	if err != nil {
-		response.RespondERR(w, err)
-		return
-	}
-
 	if providerCob.Status != cob.Status {
 		cob.Status = providerCob.Status
 		if err := ch.cobRepository.Update(cob); err != nil {
 			response.RespondERR(w, err)
 			return
 		}
+	}
+
+	response.RespondJSON(w, cob, http.StatusOK)
+	return
+}
+
+func (ch *CobHandler) CancelCob(w http.ResponseWriter, r *http.Request) {
+	txid := chi.URLParam(r, "txid")
+	if _, err := uuid.Parse(txid); err != nil {
+		apiErr := response.NewApiError("Invalid txid", http.StatusBadRequest)
+		response.RespondERR(w, apiErr)
+		return
+	}
+
+	cob, err := ch.cobRepository.FindById(txid)
+	if err != nil {
+		response.RespondERR(w, err)
+		return
+	}
+	cob.Status = model.REMOVED_BY_USER
+
+	token, err := ch.tokenService.GetToken()
+	if err != nil {
+		response.RespondERR(w, err)
+		return
+	}
+
+	if err := ch.prov.Cancel(token.AccessToken, txid); err != nil {
+		response.RespondERR(w, err)
+		return
+	}
+
+	if err := ch.cobRepository.Update(cob); err != nil {
+		response.RespondERR(w, err)
+		return
 	}
 
 	response.RespondJSON(w, cob, http.StatusOK)

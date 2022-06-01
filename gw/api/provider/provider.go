@@ -8,5 +8,5 @@ import (
 type Provider interface {
 	CreateCob(token string, cobDto dto.CreateCobDto) (*model.Cob, error)
 	FindCob(token, txid string) (*model.Cob, error)
-	// Cancel(token, txid string) error // TODO implement inside itau provider
+	Cancel(token, txid string) error
 }
