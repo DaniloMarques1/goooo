@@ -34,4 +34,5 @@ type Cob struct {
 type CobRepository interface {
 	Save(cob *Cob) error
 	FindById(txid string) (*Cob, error)
+	Update(cob *Cob) error
 }

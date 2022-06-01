@@ -23,10 +23,10 @@ func NewCobHandler(cobRepository model.CobRepository, validator *validator.Valid
 	return &CobHandler{cobRepository: cobRepository, validator: validator}
 }
 
-// TODO should have a "pay" endpoint
-// and a cancel endpoint
 func (ch *CobHandler) ConfigureRoutes(router chi.Router) {
 	router.Post("/cob", ch.CreateCob)
+	router.Patch("/cob/{txid}", ch.CancelCob)
+	router.Post("/cob/pay/{txid}", ch.Pay)
 	router.Get("/cob/{txid}", ch.FindCob)
 }
 
@@ -81,6 +81,33 @@ func (ch *CobHandler) CreateCob(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func (ch *CobHandler) CancelCob(w http.ResponseWriter, r *http.Request) {
+	txid := chi.URLParam(r, "txid")
+	if _, err := uuid.Parse(txid); err != nil {
+		apiErr := util.NewApiError("Invalid txid", http.StatusBadRequest)
+		util.RespondERR(w, apiErr)
+		return
+	}
+	cob, err := ch.cobRepository.FindById(txid)
+	if err != nil {
+		util.RespondERR(w, err)
+		return
+	}
+	if cob.Status != model.ACTIVE {
+		apiErr := util.NewApiError("You cannot remove this cob", http.StatusConflict)
+		util.RespondERR(w, apiErr)
+		return
+	}
+	cob.Status = model.REMOVED_BY_USER
+	if err := ch.cobRepository.Update(cob); err != nil {
+		util.RespondERR(w, err)
+		return
+	}
+
+	util.RespondJSON(w, cob, http.StatusOK)
+	return
+}
+
 func (ch *CobHandler) FindCob(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Consult cob\n")
 	txid := chi.URLParam(r, "txid")
@@ -94,6 +121,36 @@ func (ch *CobHandler) FindCob(w http.ResponseWriter, r *http.Request) {
 		util.RespondERR(w, err)
 		return
 	}
+	util.RespondJSON(w, cob, http.StatusOK)
+	return
+}
+
+func (ch *CobHandler) Pay(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Pay endpoint\n")
+	txid := chi.URLParam(r, "txid")
+	if _, err := uuid.Parse(txid); err != nil {
+		apiErr := util.NewApiError("Invalid txid", http.StatusBadRequest)
+		util.RespondERR(w, apiErr)
+		return
+	}
+	cob, err := ch.cobRepository.FindById(txid)
+	if err != nil {
+		util.RespondERR(w, err)
+		return
+	}
+
+	if cob.Status != model.ACTIVE {
+		apiErr := util.NewApiError("You cannot pay this cob", http.StatusConflict)
+		util.RespondERR(w, apiErr)
+		return
+	}
+
+	cob.Status = model.CONCLUDED
+	if err := ch.cobRepository.Update(cob); err != nil {
+		util.RespondERR(w, err)
+		return
+	}
+
 	util.RespondJSON(w, cob, http.StatusOK)
 	return
 }
