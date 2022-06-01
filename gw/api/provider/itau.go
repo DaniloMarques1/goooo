@@ -39,20 +39,45 @@ func (ip *ItauProvider) CreateCob(token string, cobDto dto.CreateCobDto) (*model
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		var apiError dto.ApiErrorDto
-		if err := json.NewDecoder(resp.Body).Decode(&apiError); err != nil {
+		apiErr := &dto.ApiErrorDto{}
+		if err := json.NewDecoder(resp.Body).Decode(apiErr); err != nil {
 			return nil, err
 		}
-		return nil, response.NewApiError(apiError.Message, resp.StatusCode)
+		return nil, response.NewApiError(apiErr.Message, resp.StatusCode)
 	}
 
-	var cobResp model.Cob
-	if err := json.NewDecoder(resp.Body).Decode(&cobResp); err != nil {
+	cob := &model.Cob{}
+	if err := json.NewDecoder(resp.Body).Decode(cob); err != nil {
 		return nil, err
 	}
-	return &cobResp, nil
+	return cob, nil
 }
 
 func (ip *ItauProvider) FindCob(token, txid string) (*model.Cob, error) {
-	return nil, nil
+	request, err := http.NewRequest(http.MethodGet, ip.providerUrl+"/"+txid, nil)
+	if err != nil {
+		return nil, err
+	}
+	request.Header.Add("Authorization", "Bearer "+token)
+	resp, err := ip.client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		apiErr := &dto.ApiErrorDto{}
+		if err := json.NewDecoder(resp.Body).Decode(apiErr); err != nil {
+			return nil, err
+		}
+		return nil, response.NewApiError(apiErr.Message, resp.StatusCode)
+	}
+
+	cob := &model.Cob{}
+	if err := json.NewDecoder(resp.Body).Decode(cob); err != nil {
+		return nil, err
+	}
+	return cob, nil
 }
+
+// TODO implement cancel cob

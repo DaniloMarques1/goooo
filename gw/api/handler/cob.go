@@ -35,6 +35,7 @@ func NewCobHandler(cobRepository model.CobRepository, tokenService service.Token
 	}
 }
 
+// TODO should have a cancel endpoint
 func (ch *CobHandler) ConfigureRoutes(router chi.Router) {
 	router.Post("/cob", ch.CreateCob)
 	router.Get("/cob/{txid}", ch.FindCob)
@@ -80,10 +81,30 @@ func (ch *CobHandler) FindCob(w http.ResponseWriter, r *http.Request) {
 		response.RespondERR(w, apiErr)
 		return
 	}
+	token, err := ch.tokenService.GetToken()
+	if err != nil {
+		response.RespondERR(w, err)
+		return
+	}
+
+	providerCob, err := ch.prov.FindCob(token.AccessToken, txid)
+	if err != nil {
+		response.RespondERR(w, err)
+		return
+	}
+
 	cob, err := ch.cobRepository.FindById(txid)
 	if err != nil {
 		response.RespondERR(w, err)
 		return
+	}
+
+	if providerCob.Status != cob.Status {
+		cob.Status = providerCob.Status
+		if err := ch.cobRepository.Update(cob); err != nil {
+			response.RespondERR(w, err)
+			return
+		}
 	}
 
 	response.RespondJSON(w, cob, http.StatusOK)
@@ -112,9 +133,12 @@ func (ch *CobHandler) produceMessage(cob *model.Cob) {
 		}
 	}
 
-	if b, err := merchant.Marshal(); err != nil {
+	b, err := merchant.Marshal()
+	if err == nil {
 		if err := ch.prod.Produce(b); err != nil {
 			log.Printf("Error producing message = %v\n", err)
 		}
+	} else {
+		log.Printf("Error parsing json %v\n", err)
 	}
 }

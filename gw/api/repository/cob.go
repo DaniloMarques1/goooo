@@ -10,6 +10,7 @@ import (
 	"github.com/danilomarques1/godemo/gw/api/response"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type CobMongoRepository struct {
@@ -42,4 +43,12 @@ func (cmr *CobMongoRepository) FindById(txid string) (*model.Cob, error) {
 		return nil, err
 	}
 	return cob, nil
+}
+
+func (cmr *CobMongoRepository) Update(cob *model.Cob) error {
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "status", Value: cob.Status}}}}
+	if _, err := cmr.collection.UpdateByID(context.Background(), cob.TxId, update, options.Update()); err != nil {
+		return err
+	}
+	return nil
 }
