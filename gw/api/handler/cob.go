@@ -38,7 +38,7 @@ func NewCobHandler(cobRepository model.CobRepository, tokenService service.Token
 func (ch *CobHandler) ConfigureRoutes(router chi.Router) {
 	router.Post("/cob", ch.CreateCob)
 	router.Get("/cob/{txid}", ch.FindCob)
-	router.Delete("/cob/{txid", ch.CancelCob)
+	router.Delete("/cob/{txid}", ch.CancelCob)
 }
 
 func (ch *CobHandler) CreateCob(w http.ResponseWriter, r *http.Request) {
