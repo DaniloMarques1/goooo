@@ -16,9 +16,9 @@ import (
 // where a RANDOMKEY should be a valid uuid
 func ValidatePixKey(fl validator.FieldLevel) bool {
 	log.Printf("Adding Pix key validation\n")
-	parent := fl.Parent().FieldByName("KeyType").String()
+	key := fl.Parent().FieldByName("KeyType").String()
 	pixKey := fl.Field().String()
-	switch parent {
+	switch key {
 	case "NATIONALID":
 	case "MOBILEPHONE":
 		return len(pixKey) == 11
