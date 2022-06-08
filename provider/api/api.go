@@ -19,6 +19,7 @@ type Server struct {
 func NewServer(port string) *Server {
 	s := &Server{}
 	s.Router = chi.NewRouter()
+	s.Router.Use(applicationJson)
 	s.Router.Use(s.Authorization)
 	s.port = port
 	return s
@@ -52,4 +53,11 @@ func getTokenFromHeader(header http.Header) (string, error) {
 		return "", util.NewApiError("Token not provided", http.StatusUnauthorized)
 	}
 	return splitted[1], nil
+}
+
+func applicationJson(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		next.ServeHTTP(w, r)
+	})
 }

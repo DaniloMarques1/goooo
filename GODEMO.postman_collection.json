@@ -1,0 +1,314 @@
+{
+	"info": {
+		"_postman_id": "7570ed92-11e4-4216-a2f5-9d989ae73eda",
+		"name": "GODEMO",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "8198022"
+	},
+	"item": [
+		{
+			"name": "Merchants",
+			"item": [
+				{
+					"name": "Find All",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{merchants_url}}/merchants",
+							"host": [
+								"{{merchants_url}}"
+							],
+							"path": [
+								"merchants"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Auth Provider",
+			"item": [
+				{
+					"name": "Get Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const resp = pm.response.json();",
+									"console.log(resp);",
+									"if (resp != null && resp.access_token) {",
+									"    pm.environment.set(\"token\", resp.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "client_id",
+									"value": "12345",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "12345",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{auth_provider_url}}/api/oauth/token",
+							"host": [
+								"{{auth_provider_url}}"
+							],
+							"path": [
+								"api",
+								"oauth",
+								"token"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Provider",
+			"item": [
+				{
+					"name": "Create Cob",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const resp = pm.response.json();",
+									"if (resp != null && resp.txid) {",
+									"    pm.environment.set(\"txid\", resp.txid);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"calendar\": {\n        \"expires_in\": 120\n    },\n    \"value\": 20.30,\n    \"key\": \"11954769490\",\n    \"key_type\": \"NATIONALID\",\n    \"additional_info\": [\n        {\n            \"key\": \"sub_acquirer_id\",\n            \"value\": \"31\"\n        },\n        {\n            \"key\": \"sub_acquirer_name\",\n            \"value\": \"Phoebus Team Dev\"\n        },\n        {\n            \"key\": \"merchant_id\",\n            \"value\": \"000200\"\n        },\n        {\n            \"key\": \"merchant_name\",\n            \"value\": \"Jacuma\"\n        },\n        {\n            \"key\": \"merchant_address\",\n            \"value\": \"Recife\"\n        },\n        {\n            \"key\": \"terminal_d\",\n            \"value\": \"3020018\"\n        },\n        {\n            \"key\": \"app_version\",\n            \"value\": \"v1.0.0\"\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{provider_url}}/cob",
+							"host": [
+								"{{provider_url}}"
+							],
+							"path": [
+								"cob"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Consult cob",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{provider_url}}/cob/{{txid}}",
+							"host": [
+								"{{provider_url}}"
+							],
+							"path": [
+								"cob",
+								"{{txid}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pay Cob",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{provider_url}}/cob/pay/{{txid}}",
+							"host": [
+								"{{provider_url}}"
+							],
+							"path": [
+								"cob",
+								"pay",
+								"{{txid}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Cob",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{provider_url}}/cob/{{txid}}",
+							"host": [
+								"{{provider_url}}"
+							],
+							"path": [
+								"cob",
+								"{{txid}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Gateway",
+			"item": [
+				{
+					"name": "Create cob",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const resp = pm.response.json();",
+									"if (resp != null && resp.txid) {",
+									"    pm.environment.set(\"txid\", resp.txid);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"calendar\": {\n        \"expires_in\": 120\n    },\n    \"value\": 10.00,\n    \"key\": \"11954769490\",\n    \"key_type\": \"NATIONALID\",\n    \"additional_info\": [\n        {\n            \"key\": \"sub_acquirer_id\",\n            \"value\": \"31\"\n        },\n        {\n            \"key\": \"sub_acquirer_name\",\n            \"value\": \"Phoebus Team Dev\"\n        },\n        {\n            \"key\": \"merchant_id\",\n            \"value\": \"000200\"\n        },\n        {\n            \"key\": \"merchant_name\",\n            \"value\": \"Umbrella\"\n        },\n        {\n            \"key\": \"merchant_address\",\n            \"value\": \"Recife\"\n        },\n        {\n            \"key\": \"terminal_d\",\n            \"value\": \"3020018\"\n        },\n        {\n            \"key\": \"app_version\",\n            \"value\": \"v1.0.0\"\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{gateway_url}}/cob",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"cob"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Consult Cob",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{gateway_url}}/cob/{{txid}}",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"cob",
+								"{{txid}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Cob",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{gateway_url}}/cob/{{txid}}",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"cob",
+								"{{txid}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
