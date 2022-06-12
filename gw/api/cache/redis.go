@@ -9,15 +9,15 @@ import (
 )
 
 type RedisCache struct {
-	redisConn *redis.Client
+	client *redis.Client
 }
 
-func NewRedisCache(redisConn *redis.Client) *RedisCache {
-	return &RedisCache{redisConn: redisConn}
+func NewRedisCache(client *redis.Client) *RedisCache {
+	return &RedisCache{client: client}
 }
 
 func (rc *RedisCache) SaveToCache(key string, value []byte, duration time.Duration) error {
-	err := rc.redisConn.SetEX(
+	err := rc.client.SetEX(
 		context.Background(),
 		key,
 		string(value),
@@ -32,7 +32,7 @@ func (rc *RedisCache) SaveToCache(key string, value []byte, duration time.Durati
 }
 
 func (rs *RedisCache) GetFromCache(key string) ([]byte, error) {
-	str, err := rs.redisConn.Get(context.Background(), key).Result()
+	str, err := rs.client.Get(context.Background(), key).Result()
 	if err != nil {
 		return nil, err
 	}

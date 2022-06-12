@@ -25,22 +25,25 @@ func main() {
 		log.Fatal(err)
 	}
 
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(os.Getenv("MONGO_URI")))
+	client, err := mongo.Connect(
+		context.Background(),
+		options.Client().ApplyURI(os.Getenv("MONGO_URI")),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	cobRepository := repository.NewCobMongoRepository(client, "cob")
 
-	redisConn := redis.NewClient(&redis.Options{
+	redisClient := redis.NewClient(&redis.Options{
 		Addr: os.Getenv("REDIS_ADDR"),
 		DB:   0,
 	})
-	if err := redisConn.Ping(context.Background()).Err(); err != nil {
+	if err := redisClient.Ping(context.Background()).Err(); err != nil {
 		log.Fatal(err)
 	}
 
-	redisCache := cache.NewRedisCache(redisConn)
+	redisCache := cache.NewRedisCache(redisClient)
 	tokenService := service.NewTokenServiceImpl(redisCache)
 
 	validate := validator.New()
